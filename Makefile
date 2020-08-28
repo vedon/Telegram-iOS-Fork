@@ -1,11 +1,57 @@
 .PHONY : check_env build build_arm64 build_debug_arm64 package package_arm64 app app_arm64 app_debug_arm64 build_buckdebug build_verbose kill_xcode clean project project_buckdebug temp
 
 include Utils.makefile
-
+include ./build-input-fork/bazel-build-custom-set.makefile
 
 APP_VERSION="7.0"
 CORE_COUNT=$(shell sysctl -n hw.logicalcpu)
 CORE_COUNT_MINUS_ONE=$(shell expr ${CORE_COUNT} \- 1)
+
+bazel_app_debug_arm64:
+	APP_VERSION="${APP_VERSION}" \
+	build-system/prepare-build.sh Telegram distribution
+	"${BAZEL}" build Telegram/Telegram ${BAZEL_CACHE_FLAGS} ${BAZEL_COMMON_FLAGS} ${BAZEL_DEBUG_FLAGS} \
+	-c dbg \
+	--ios_multi_cpus=arm64 \
+	--watchos_cpus=armv7k,arm64_32 \
+	--verbose_failures
+
+bazel_app_arm64:
+	APP_VERSION="${APP_VERSION}" \
+	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
+	build-system/prepare-build.sh Telegram distribution
+	"${BAZEL}" build Telegram/Telegram ${BAZEL_CACHE_FLAGS} ${BAZEL_COMMON_FLAGS} ${BAZEL_OPT_FLAGS} \
+	-c opt \
+	--ios_multi_cpus=arm64 \
+	--watchos_cpus=armv7k,arm64_32 \
+	--objc_enable_binary_stripping=true \
+	--features=dead_strip \
+	--apple_generate_dsym \
+	--output_groups=+dsyms \
+	--verbose_failures
+
+bazel_prepare_development_build:
+	APP_VERSION="${APP_VERSION}" \
+	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
+	build-system/prepare-build.sh Telegram development
+
+bazel_project: kill_xcode bazel_prepare_development_build
+	APP_VERSION="${APP_VERSION}" \
+	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
+	build-system/generate-xcode-project.sh Telegram
+
+bazel_soft_project: bazel_prepare_development_build
+	APP_VERSION="${APP_VERSION}" \
+	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
+	build-system/generate-xcode-project.sh Telegram
+
+bazel_opt_project: bazel_prepare_development_build
+	APP_VERSION="${APP_VERSION}" \
+	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
+	GENERATE_OPT_PROJECT=1 \
+	build-system/generate-xcode-project.sh Telegram
+
+
 
 BUCK_OPTIONS=\
 	--config custom.appVersion="${APP_VERSION}" \
@@ -382,48 +428,3 @@ clean: kill_xcode
 project: check_env kill_xcode
 	$(BUCK) project //Telegram:workspace --config custom.mode=project ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS}
 	open Telegram/Telegram_Buck.xcworkspace
-
-bazel_app_debug_arm64:
-	APP_VERSION="${APP_VERSION}" \
-	build-system/prepare-build.sh Telegram distribution
-	"${BAZEL}" build Telegram/Telegram ${BAZEL_CACHE_FLAGS} ${BAZEL_COMMON_FLAGS} ${BAZEL_DEBUG_FLAGS} \
-	-c dbg \
-	--ios_multi_cpus=arm64 \
-	--watchos_cpus=armv7k,arm64_32 \
-	--verbose_failures
-
-bazel_app_arm64:
-	APP_VERSION="${APP_VERSION}" \
-	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
-	build-system/prepare-build.sh Telegram distribution
-	"${BAZEL}" build Telegram/Telegram ${BAZEL_CACHE_FLAGS} ${BAZEL_COMMON_FLAGS} ${BAZEL_OPT_FLAGS} \
-	-c opt \
-	--ios_multi_cpus=arm64 \
-	--watchos_cpus=armv7k,arm64_32 \
-	--objc_enable_binary_stripping=true \
-	--features=dead_strip \
-	--apple_generate_dsym \
-	--output_groups=+dsyms \
-	--verbose_failures
-
-bazel_prepare_development_build:
-	APP_VERSION="${APP_VERSION}" \
-	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
-	build-system/prepare-build.sh Telegram development
-
-bazel_project: kill_xcode bazel_prepare_development_build
-	APP_VERSION="${APP_VERSION}" \
-	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
-	build-system/generate-xcode-project.sh Telegram
-
-bazel_soft_project: bazel_prepare_development_build
-	APP_VERSION="${APP_VERSION}" \
-	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
-	build-system/generate-xcode-project.sh Telegram
-
-bazel_opt_project: bazel_prepare_development_build
-	APP_VERSION="${APP_VERSION}" \
-	BAZEL_CACHE_DIR="${BAZEL_CACHE_DIR}" \
-	GENERATE_OPT_PROJECT=1 \
-	build-system/generate-xcode-project.sh Telegram
-
