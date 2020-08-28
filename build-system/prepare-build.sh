@@ -46,7 +46,7 @@ source "$COPY_PROVISIONING_PROFILES_SCRIPT"
 source "$PREPARE_BUILD_VARIABLES_SCRIPT"
 
 echo "Copying provisioning profiles..."
-copy_provisioning_profiles "$PROFILES_TYPE"
+# copy_provisioning_profiles "$PROFILES_TYPE"
 
 echo "Preparing build variables..."
 prepare_build_variables "$BUILD_TYPE"

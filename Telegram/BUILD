@@ -847,7 +847,7 @@ ios_application(
     ),
     families = ["iphone", "ipad"],
     minimum_os_version = "9.0",
-    provisioning_profile = "//build-input/data/provisioning-profiles:Telegram.mobileprovision",
+    # provisioning_profile = "//build-input/data/provisioning-profiles:Telegram.mobileprovision",
     entitlements = ":TelegramEntitlements.entitlements",
     infoplists = [
         ":TelegramInfoPlist",
