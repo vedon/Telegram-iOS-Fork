@@ -1,7 +1,7 @@
 .PHONY : check_env build build_arm64 build_debug_arm64 package package_arm64 app app_arm64 app_debug_arm64 build_buckdebug build_verbose kill_xcode clean project project_buckdebug temp
 
 include Utils.makefile
-include ./build-input-fork/bazel-build-custom-set.makefile
+include ./bazel-custom-config/build-custom-set.makefile
 
 APP_VERSION="7.0"
 CORE_COUNT=$(shell sysctl -n hw.logicalcpu)
