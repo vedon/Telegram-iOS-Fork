@@ -7,6 +7,11 @@ APP_VERSION="7.0"
 CORE_COUNT=$(shell sysctl -n hw.logicalcpu)
 CORE_COUNT_MINUS_ONE=$(shell expr ${CORE_COUNT} \- 1)
 
+dry_build:
+	echo ${TARGET}
+	"${BAZEL}" build //Telegram:Telegram ${BAZEL_CACHE_FLAGS} ${BAZEL_COMMON_FLAGS} ${BAZEL_DEBUG_FLAGS} \
+	-c dbg \
+
 bazel_app_debug_arm64:
 	APP_VERSION="${APP_VERSION}" \
 	build-system/prepare-build.sh Telegram distribution
@@ -15,6 +20,9 @@ bazel_app_debug_arm64:
 	--ios_multi_cpus=arm64 \
 	--watchos_cpus=armv7k,arm64_32 \
 	--verbose_failures
+
+clean: kill_xcode
+	bazel-custom-config/clean.sh
 
 bazel_app_arm64:
 	APP_VERSION="${APP_VERSION}" \
@@ -421,9 +429,6 @@ build_verbose: check_env
 deps: check_env
 	$(BUCK) query "deps(//Telegram:AppPackage)" --dot  \
 	${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS}
-
-clean: kill_xcode
-	sh clean.sh
 
 project: check_env kill_xcode
 	$(BUCK) project //Telegram:workspace --config custom.mode=project ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS}

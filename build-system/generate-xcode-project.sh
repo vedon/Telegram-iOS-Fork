@@ -52,6 +52,7 @@ BAZEL_OPTIONS=(\
 	--strategy=SwiftCompile=standalone \
 	--features=swift.enable_batch_mode \
 	--swiftcopt=-j${CORE_COUNT_MINUS_ONE} \
+	--swiftcopt=-Xwrapped-swift=-debug-prefix-pwd-is-dot \
 )
 
 if [ "$BAZEL_CACHE_DIR" != "" ]; then

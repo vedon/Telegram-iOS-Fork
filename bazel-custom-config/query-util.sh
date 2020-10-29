@@ -1,4 +1,4 @@
-include constant.sh
+source constant.makefile
 
 target=$1
 target_name=${target#*:}
